@@ -1,0 +1,14 @@
+- name: add or update user
+  user: name={{ username }} password={{ password }} groups=sudo shell=/bin/bash
+  when: username != "root" and password is defined
+  tags: adduser
+
+- name: sync ssh key
+  authorized_key: user={{username}} key="{{ lookup('file',username) }}" exclusive=yes
+  tags: sshkey
+  when: username != "root"
+
+- name: remove user
+  user: name={{username}} groups= remove=true state=absent
+  when: username != "root" and remove is defined
+  tags: removeuser
