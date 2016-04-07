@@ -7,13 +7,15 @@
     - 将`{{username}}`的公钥同步到`{{username}}`用户下,公钥地址为ansible项目`roles/user/files/{{username}}`,[地址](roles/user/files/),tags:sshkey
       
     - 当remove参数存在时,执行删除用户操作,注意该操作会删除该用户home下所有数据,不可逆操作!!!,tags:removeuser
+	
+	- 不允许修改root
 
 - 变量
 
     - `hostname` 需要操作的服务器组名
     - `username` 用户名,不允许为root
-    - `password` 加密后的密码,当该变量不存在时不执行用户的创建或更新密码的操作,加密详见[说明](http://docs.ansible.com/ansible/faq.html#how-do-i-generate-crypted-passwords-for-the-user-module)
     - `remove` 是否删除该用户,不传则不执行删除操作
+	- `group` 添加用户到某个组,可指定多个,逗号分隔
 
 
 - 使用说明
@@ -27,13 +29,14 @@
             ```
             mkpasswd --method=SHA-512
             ```
-
+        - 将加密串写入到`roles/user/files/passwd/{{ username }}`,这里用的是test用户所以是写到`roles/user/file/passwd/test`
+			
         - 获得公钥,将公钥写入`roles/user/files/{{ username }}`,这里用的是test用户所以是写到`roles/user/files/test`中,该文件格式等同于authorized_keys
 
         - 执行脚本创建用户/修改密码,并发布公钥
 
             ```
-            ansible-playbook -v -i staging/hosts user.yml -e 'hostname=local username=test password=$6$Z/JW/EYXh/b$agDIxE62Xen5P.q7TnS2G37GAOWxcuxkLlcQI8MEzc1iXSCQ3G7zVeGzEuFSoDUDVYuyp7PnBO8L6VYQFzFKA1'
+            ansible-playbook -v -i staging/hosts user.yml -e 'hostname=local username=test group=sudo'
             ```
 
 
@@ -49,7 +52,7 @@
         - 执行脚本创建用户/修改密码(其实就是指定tag为adduser)
 
             ```
-            ansible-playbook -v -i staging/hosts user.yml -t adduser -e 'hostname=local username=test password=$6$Z/JW/EYXh/b$agDIxE62Xen5P.q7TnS2G37GAOWxcuxkLlcQI8MEzc1iXSCQ3G7zVeGzEuFSoDUDVYuyp7PnBO8L6VYQFzFKA1'
+            ansible-playbook -v -i staging/hosts user.yml -t adduser -e 'hostname=local username=test'
             ```
             
             
@@ -58,7 +61,7 @@
 
         - 获得公钥,将公钥写入`roles/user/files/{{ username }}`,这里用的是test用户所以是写到`roles/user/files/test`中,该文件格式等同于authorized_keys
 
-        - 执行脚本同步公钥(实际上就是不指定password即可)
+        - 执行脚本同步公钥
 
             ```
             ansible-playbook -v -i staging/hosts user.yml -e 'hostname=local username=test'
